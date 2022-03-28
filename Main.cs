@@ -44,23 +44,26 @@ namespace FC_AP
 			{
 				 // if gameobject not created and is in game
 				if (!Set && Singleton<StageBattleComponent>.instance.isInGame)
-                {
-					SetGameObject();
+                		{
+					SetAP();
 				}
 				if (Singleton<TaskStageTarget>.instance.m_GreatResult != 0)
-				{
-                    UnityEngine.Object.Destroy(AP);
+				{	
+                    			UnityEngine.Object.Destroy(AP);
+					SetFC();
 				}
 				if (Singleton<TaskStageTarget>.instance.m_MissResult != 0 || Singleton<TaskStageTarget>.instance.m_MissCombo != 0)
 				{
-					UnityEngine.Object.Destroy(AP);
-					UnityEngine.Object.Destroy(FC);
+					if (GameObject.Find("FC") != null)
+					{
+						UnityEngine.Object.Destroy(FC);
+					}
+					else UnityEngine.Object.Destroy(AP);
 				}
 				// Destroy gameobject in result screen
 				if (GameObject.Find("PnlVictory_2D") != null)
-                {
+                		{
 					UnityEngine.Object.Destroy(AP);
-					UnityEngine.Object.Destroy(FC);
 				}
 			}
 			// if not in play scene
@@ -70,7 +73,30 @@ namespace FC_AP
 			}
 		}
 
-		public static void SetGameObject()
+		public static void SetAP()
+		{
+			Set = true; // Set to true to prevent infinite loop
+			// create canvas
+			GameObject canvas = new GameObject();
+			Canvas mycanvas;
+			canvas.name = "Indicator Canvas";
+			canvas.AddComponent<Canvas>();
+			canvas.AddComponent<CanvasScaler>();
+			canvas.AddComponent<GraphicRaycaster>();
+			mycanvas = canvas.GetComponent<Canvas>();
+			mycanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+			// AP Gameobject
+			AP = new GameObject("AP");
+			AP.transform.SetParent(canvas.transform);
+			AP.transform.position = new Vector3(Screen.width * 20 / 80, Screen.height * 39 / 45, 0f);
+			Text AP_text = AP.AddComponent<Text>();
+			AP_text.text = "AP";
+			AP_text.font = root.transform.Find("PnlPause/Bg/ImgBase/ImgBase2/TxtTittle").GetComponent<Text>().font;
+			AP_text.fontSize = 60;
+			AP_text.color = Color.yellow;
+			AP_text.transform.position = new Vector3(Screen.width * 20 / 80, Screen.height * 39 / 45, 0f);
+		}
+		public static void SetFC()
 		{
 			Set = true; // Set to true to prevent infinite loop
 			// create canvas
@@ -85,25 +111,14 @@ namespace FC_AP
 			// FC Gameobject
 			FC = new GameObject("FC");
 			FC.transform.SetParent(canvas.transform);
-			FC.transform.position = new Vector3(Screen.width * 17 / 80, Screen.height * 39 / 45, 0f);
+			FC.transform.position = new Vector3(Screen.width * 20 / 80, Screen.height * 39 / 45, 0f);
 			Text FC_text = FC.AddComponent<Text>();
 			FC_text.text = "FC";
 			GameObject root = GameObject.Find("Forward");
 			FC_text.font = root.transform.Find("PnlPause/Bg/ImgBase/ImgBase2/TxtTittle").GetComponent<Text>().font;
-			FC_text.fontSize = 45;
-			FC_text.color = Color.blue;
-			FC_text.transform.position = new Vector3(Screen.width * 17 / 80, Screen.height * 39 / 45, 0f);
-			// AP Gameobject
-			AP = new GameObject("AP");
-			AP.transform.SetParent(canvas.transform);
-			AP.transform.position = new Vector3(Screen.width * 21 / 80, Screen.height * 39 / 45, 0f);
-			Text AP_text = AP.AddComponent<Text>();
-			AP_text.text = "AP";
-			AP_text.font = root.transform.Find("PnlPause/Bg/ImgBase/ImgBase2/TxtTittle").GetComponent<Text>().font;
-			AP_text.fontSize = 45;
-			AP_text.color = Color.yellow;
-			AP_text.transform.position = new Vector3(Screen.width * 21 / 80, Screen.height * 39 / 45, 0f);
-
+			FC_text.fontSize = 60;
+			FC_text.color = Color.pink;
+			FC_text.transform.position = new Vector3(Screen.width * 20 / 80, Screen.height * 39 / 45, 0f);
 		}
 	}
 	/*public class ToggleManager
