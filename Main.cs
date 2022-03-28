@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -18,100 +18,120 @@ using HarmonyLib;
 
 namespace FC_AP
 {
-	public class Main : MelonMod
+    public class Main : MelonMod
     {
-		public static bool isPlayScene;
-		public static bool Set;
-		public static GameObject FC;
-		public static GameObject AP;
-		public override void OnSceneWasLoaded(int buildIndex, string sceneName)
-		{
-			base.OnSceneWasLoaded(buildIndex, sceneName);
-			if (sceneName == "GameMain")
-			{
-				isPlayScene = true;
-			}
-			else
-			{
-				isPlayScene = false;
-			}
-		}
+        public static bool isPlayScene;
+        public static bool Set;
+        public static bool isAP;
+        public static bool isFC;
+        public static GameObject FC;
+        public static GameObject AP;
+        public override void OnSceneWasLoaded(int buildIndex, string sceneName)
+        {
+            base.OnSceneWasLoaded(buildIndex, sceneName);
+            if (sceneName == "GameMain")
+            {
+                isPlayScene = true;
+            }
+            else
+            {
+                isPlayScene = false;
+            }
+        }
 
-		public override void OnUpdate()
-		{
-			base.OnUpdate();
-			if (isPlayScene)
-			{
-				 // if gameobject not created and is in game
-				if (!Set && Singleton<StageBattleComponent>.instance.isInGame)
+        public override void OnUpdate()
+        {
+            base.OnUpdate();
+            if (isPlayScene)
+            {
+                // if gameobject not created and is in game
+                if (!Set && Singleton<StageBattleComponent>.instance.isInGame)
                 {
-					SetGameObject();
-				}
-				if (Singleton<TaskStageTarget>.instance.m_GreatResult != 0)
-				{
+                    SetAP();
+                }
+                if (isFC && (Singleton<TaskStageTarget>.instance.m_MissResult != 0 || Singleton<TaskStageTarget>.instance.m_MissCombo != 0))
+                {
+                    UnityEngine.Object.Destroy(FC);
                     UnityEngine.Object.Destroy(AP);
-				}
-				if (Singleton<TaskStageTarget>.instance.m_MissResult != 0 || Singleton<TaskStageTarget>.instance.m_MissCombo != 0)
-				{
-					UnityEngine.Object.Destroy(AP);
-					UnityEngine.Object.Destroy(FC);
-				}
-				// Destroy gameobject in result screen
-				if (GameObject.Find("PnlVictory_2D") != null)
+                    return;
+                }
+                if (isAP && Singleton<TaskStageTarget>.instance.m_GreatResult != 0)
                 {
-					UnityEngine.Object.Destroy(AP);
-					UnityEngine.Object.Destroy(FC);
-				}
-			}
-			// if not in play scene
-			if (!isPlayScene)
-			{
-				Set = false;
-			}
-		}
+                    isAP = false;
+                    UnityEngine.Object.Destroy(AP);
+                    SetFC();
+                }
+                // Destroy gameobject in result screen
+                if (GameObject.Find("PnlVictory_2D") != null)
+                {
+                    UnityEngine.Object.Destroy(AP);
+                    UnityEngine.Object.Destroy(FC);
+                    return;
+                }
+            }
+            // if not in play scene
+            if (!isPlayScene)
+            {
+                Set = false;
+            }
+        }
 
-		public static void SetGameObject()
-		{
-			Set = true; // Set to true to prevent infinite loop
-			// create canvas
-			GameObject canvas = new GameObject();
-			Canvas mycanvas;
-			canvas.name = "Indicator Canvas";
-			canvas.AddComponent<Canvas>();
-			canvas.AddComponent<CanvasScaler>();
-			canvas.AddComponent<GraphicRaycaster>();
-			mycanvas = canvas.GetComponent<Canvas>();
-			mycanvas.renderMode = RenderMode.ScreenSpaceOverlay;
-			// FC Gameobject
-			FC = new GameObject("FC");
-			FC.transform.SetParent(canvas.transform);
-			FC.transform.position = new Vector3(Screen.width * 17 / 80, Screen.height * 39 / 45, 0f);
-			Text FC_text = FC.AddComponent<Text>();
-			FC_text.text = "FC";
-			GameObject root = GameObject.Find("Forward");
-			FC_text.font = root.transform.Find("PnlPause/Bg/ImgBase/ImgBase2/TxtTittle").GetComponent<Text>().font;
-			FC_text.fontSize = 45;
-			FC_text.color = Color.blue;
-			FC_text.transform.position = new Vector3(Screen.width * 17 / 80, Screen.height * 39 / 45, 0f);
-			// AP Gameobject
-			AP = new GameObject("AP");
-			AP.transform.SetParent(canvas.transform);
-			AP.transform.position = new Vector3(Screen.width * 21 / 80, Screen.height * 39 / 45, 0f);
-			Text AP_text = AP.AddComponent<Text>();
-			AP_text.text = "AP";
-			AP_text.font = root.transform.Find("PnlPause/Bg/ImgBase/ImgBase2/TxtTittle").GetComponent<Text>().font;
-			AP_text.fontSize = 45;
-			AP_text.color = Color.yellow;
-			AP_text.transform.position = new Vector3(Screen.width * 21 / 80, Screen.height * 39 / 45, 0f);
-
-		}
-	}
-	/*public class ToggleManager
+        public static void SetAP()
+        {
+            isAP = true;
+            Set = true; // Set to true to prevent infinite loop
+            // create canvas
+            GameObject canvas = new GameObject();
+            Canvas mycanvas;
+            canvas.name = "Indicator Canvas";
+            canvas.AddComponent<Canvas>();
+            canvas.AddComponent<CanvasScaler>();
+            canvas.AddComponent<GraphicRaycaster>();
+            mycanvas = canvas.GetComponent<Canvas>();
+            mycanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            // AP Gameobject
+            AP = new GameObject("AP");
+            AP.transform.SetParent(canvas.transform);
+            AP.transform.position = new Vector3(Screen.width * 17 / 80 + 24, Screen.height * 80 / 90 - 24, 0f);
+            Text AP_text = AP.AddComponent<Text>();
+            AP_text.text = "AP";
+            GameObject root = GameObject.Find("Forward");
+            AP_text.font = root.transform.Find("PnlPause/Bg/ImgBase/ImgBase2/TxtTittle").GetComponent<Text>().font;
+            AP_text.fontSize = 72 * Screen.height / 1080;
+            AP_text.color = Color.yellow;
+            AP_text.transform.position = new Vector3(Screen.width * 17 / 80 + 24, Screen.height * 80 / 90 - 24, 0f);
+        }
+        public static void SetFC()
+        {
+            isFC = true;
+            Set = true; // Set to true to prevent infinite loop
+            // create canvas
+            GameObject canvas = new GameObject();
+            Canvas mycanvas;
+            canvas.name = "Indicator Canvas";
+            canvas.AddComponent<Canvas>();
+            canvas.AddComponent<CanvasScaler>();
+            canvas.AddComponent<GraphicRaycaster>();
+            mycanvas = canvas.GetComponent<Canvas>();
+            mycanvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            // AP Gameobject
+            FC = new GameObject("FC");
+            FC.transform.SetParent(canvas.transform);
+            FC.transform.position = new Vector3(Screen.width * 17 / 80 + 24, Screen.height * 80 / 90 - 24, 0f);
+            Text FC_text = FC.AddComponent<Text>();
+            FC_text.text = "FC";
+            GameObject root = GameObject.Find("Forward");
+            FC_text.font = root.transform.Find("PnlPause/Bg/ImgBase/ImgBase2/TxtTittle").GetComponent<Text>().font;
+            FC_text.fontSize = 72 * Screen.height / 1080;
+            FC_text.color = new Color(105 / 255f, 211 / 255f, 255 / 255f, 255 / 255f);
+            FC_text.transform.position = new Vector3(Screen.width * 17 / 80 + 24, Screen.height * 80 / 90 - 24, 0f);
+        }
+    }
+    /*public class ToggleManager
 	{
 		public static GameObject FC_APToggle;
 		public static GameObject RestartToggle;
 		public static GameObject Vselect;
-
 		public static void SetUpFC_APToggle()
         {
 			FC_APToggle.name = "FC AP Indicator Toggle";
@@ -180,7 +200,6 @@ namespace FC_AP
 			component2.color = new Color(0.23529412f, 0.15686275f, 0.43529412f);
 			component3.color = new Color(0.40392157f, 0.3647059f, 0.50980395f);
 		}
-
 		public static void Restart()
         {
 			if (Singleton<TaskStageTarget>.instance.m_GreatResult != 0)
@@ -193,7 +212,6 @@ namespace FC_AP
 			}
 		}
 	}
-
 	[HarmonyPatch(typeof(PnlStage), "Awake")]
 	internal class Patch
     {
@@ -222,10 +240,9 @@ namespace FC_AP
 				ToggleManager.SetUpFC_APToggle();
 			}
 		}
-
 	}*/
 
-	/*[HarmonyPatch(typeof(VolumeSelect), MethodType.Constructor)]
+    /*[HarmonyPatch(typeof(VolumeSelect), MethodType.Constructor)]
 	internal class VolumeCtorPatch
 	{
 		// Token: 0x0600000F RID: 15 RVA: 0x000026BA File Offset: 0x000008BA
@@ -233,7 +250,6 @@ namespace FC_AP
 		{
 		}
 	}
-
 	public class ToggleSave
 	{
 		public static bool FC_APEnabled
@@ -259,7 +275,6 @@ namespace FC_AP
 				restartEnabled.Value = value;
             }
         }
-
 		public static void Load()
 		{
 			ToggleCategory = MelonPreferences.CreateCategory("FC AP");
@@ -267,11 +282,8 @@ namespace FC_AP
 			fc_apEnabled = MelonPreferences.CreateEntry<bool>("FC AP", "fc_apEnabled", false, null, "Whether the FC AP indicator checkbox is enabled.", false, false, null);
 			restartEnabled = MelonPreferences.CreateEntry<bool>("Restart", "restartEnabled", false, null, "Whether the restart checkbox is enabled.", false, false, null);
 		}
-
 		public static MelonPreferences_Category ToggleCategory;
-
 		public static MelonPreferences_Entry<bool> fc_apEnabled;
-
 		public static MelonPreferences_Entry<bool> restartEnabled;
 	}*/
 }
